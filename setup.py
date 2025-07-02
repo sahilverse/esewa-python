@@ -11,7 +11,7 @@ setup(
     description="Python package for integrating eSewa payment gateway",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/sahilverse/esewa-python",  # your repo URL
+    url="https://github.com/sahilverse/esewa-python", 
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
