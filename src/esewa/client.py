@@ -79,7 +79,7 @@ def esewa_payment_gateway(
         return {
             "status_code": response.status_code,
             "message": "Payment request successful",
-            "response_url": response.url
+            "payment_url": response.url
         }
     except requests.RequestException as e:
         raise PaymentRequestError(f"Error during payment request: {str(e)}")

@@ -195,7 +195,7 @@ class EsewaInitiatePaymentView(APIView):
 
             return Response({
                 "transaction": TransactionSerializer(transaction).data,
-                "form_html": esewa_response.get("form_html"),
+                "payment_url": esewa_response.get("payment_url"),
                 "status": esewa_response.get("status"),
                 "message": esewa_response.get("message"),
             })
