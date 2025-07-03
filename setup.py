@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="esewa",  
-    version="0.1.0",         
+    version="0.1.1",         
     author="Sahil Dahal",
     author_email="the.sahil.verse@gmail.com",
     description="Python package for integrating eSewa payment gateway",
@@ -19,7 +19,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.13',
+    python_requires='>=3.12',
     install_requires=[
         "requests>=2.25.1", 
     ],

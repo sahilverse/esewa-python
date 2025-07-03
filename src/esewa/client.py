@@ -1,6 +1,7 @@
 import requests
 from typing import Dict
 from .utils import generate_hmac_sha256_hash
+from .exceptions import PaymentRequestError, StatusCheckError, ValidationError
 
 
 def esewa_payment_gateway(
@@ -40,11 +41,23 @@ def esewa_payment_gateway(
     Returns:
         Dict: Contains status code, message, and the raw HTML form
               returned by eSewa (which should be rendered on the frontend).
+              
+    Raises:
+        ValidationError: If any input is invalid.
+        PaymentRequestError: If the request to eSewa fails.
     """
+    
+    if not all([amount, transaction_uuid, product_code, secret, success_url, failure_url, esewa_payment_url]):
+        raise ValidationError("Missing required fields for payment request.")
+    
     total_amount = amount + product_delivery_charge + product_service_charge + tax_amount
 
     data = f"total_amount={total_amount},transaction_uuid={transaction_uuid},product_code={product_code}"
-    signature = generate_hmac_sha256_hash(data, secret, algorithm, encoding)
+    
+    try:
+        signature = generate_hmac_sha256_hash(data, secret, algorithm, encoding)
+    except Exception as e:
+        raise PaymentRequestError(f"Signature generation failed: {str(e)}")
 
     payment_data = {
         "amount": amount,
@@ -62,18 +75,15 @@ def esewa_payment_gateway(
 
     try:
         response = requests.post(esewa_payment_url, params=payment_data, timeout=10)
+        response.raise_for_status() 
+    except requests.RequestException as e:
+        raise PaymentRequestError(f"Error during payment request: {str(e)}")
 
-        return {
-            "status": response.status_code,
-            "message": "Payment form received",
-            "form_html": response.text  
-        }
-
-    except Exception as e:
-        return {
-            "status": 500,
-            "message": f"Error during payment request: {str(e)}"
-        }
+    return {
+        "status": response.status_code,
+        "message": "Payment form received",
+        "form_html": response.text
+    }
 
 
 def esewa_check_status(
@@ -93,7 +103,14 @@ def esewa_check_status(
 
     Returns:
         Dict: Response from eSewa as a dictionary. Includes status, ref_id, etc.
+    
+    Raises:
+        ValidationError: If inputs are missing.
+        StatusCheckError: If the request fails or response is invalid.
     """
+    if not all([total_amount, transaction_uuid, product_code, status_check_url]):
+        raise ValidationError("Missing required fields for status check.")
+    
     params = {
         "total_amount": total_amount,
         "transaction_uuid": transaction_uuid,
@@ -102,12 +119,11 @@ def esewa_check_status(
 
     try:
         response = requests.get(status_check_url, params=params, timeout=10)
+        response.raise_for_status()
         return response.json()
-
-    except Exception as e:
-        return {
-            "status": 500,
-            "message": f"Status check failed: {str(e)}"
-        }
+    except requests.RequestException as e:
+        raise StatusCheckError(f"Error during status check request: {str(e)}")
+    except ValueError as e:
+        raise StatusCheckError(f"Invalid JSON response from eSewa: {str(e)}")
 
 
