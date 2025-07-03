@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "esewa"
-version = "0.2.0"
+version = "0.2.1"
 description = " A Python client for eSewa integration"
 authors = [
     { name = "Sahil Dahal", email = "the.sahil.verse@gmail.com" }

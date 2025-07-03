@@ -164,7 +164,7 @@ from rest_framework import status
 from .models import Transaction
 from .serializers import TransactionSerializer
 from products.models import Product
-from esewa import esewa_payment_gateway, esewa_check_status, generate_unique_id
+from esewa import esewa_payment_gateway, esewa_check_status, generate_unique_id, base64_decode
 
 
 class EsewaInitiatePaymentView(APIView):
@@ -208,28 +208,35 @@ class EsewaInitiatePaymentView(APIView):
 
 class EsewaStatusCheckView(APIView):
     def post(self, request):
-        product_id = request.data.get("product_id")
+        base64_data = request.data.get("data")
 
-        if not product_id:
-            return Response({"error": "product_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not base64_data:
+            return Response({"error": "data is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            decoded_data = base64_decode(base64_data)
+            transaction_uuid = decoded_data.get("transaction_uuid")
+
             transaction = (
                 Transaction.objects
-                .filter(product_id=product_id)
-                .latest("created_at")
+                .filter(transaction_uuid=transaction_uuid)
+                .first()
             )
+
+            if not transaction:
+                return Response({"error": "Transaction not found"}, status=status.HTTP_404_NOT_FOUND)
 
             status_response = esewa_check_status(
                 total_amount=transaction.amount,
                 transaction_uuid=transaction.transaction_uuid,
-                product_code="your_product_code",  # Replace with your actual product code
-                status_check_url="your_status_check_url"  # Replace with your actual status check URL
+                product_code="EPAYTEST", 
+                status_check_url="https://rc.esewa.com.np/api/epay/transaction/status/"  
             )
-
-            # Example: status_response might look like {'status': 200, 'data': {'status': 'COMPLETE', ...}}
-            transaction.status = status_response.get("data", {}).get("status", transaction.status)
-            transaction.save()
+            
+            if status_response.get("status") == "SUCCESS":
+                transaction.status = "COMPLETED"
+            else:
+                transaction.status = status_response.get("status", "FAILED")
 
             return Response(TransactionSerializer(transaction).data)
 
@@ -237,7 +244,6 @@ class EsewaStatusCheckView(APIView):
             return Response({"error": "No transaction found for this product"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 ```
 
