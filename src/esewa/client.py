@@ -76,15 +76,15 @@ def esewa_payment_gateway(
     try:
         response = requests.post(esewa_payment_url, params=payment_data, timeout=10)
         response.raise_for_status() 
+        return {
+            "status_code": response.status_code,
+            "message": "Payment request successful",
+            "response_url": response.url
+        }
     except requests.RequestException as e:
         raise PaymentRequestError(f"Error during payment request: {str(e)}")
 
-    return {
-        "status": response.status_code,
-        "message": "Payment form received",
-        "form_html": response.text
-    }
-
+    
 
 def esewa_check_status(
     total_amount: float,

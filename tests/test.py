@@ -33,7 +33,7 @@ def test_esewa_payment():
             failure_url="https://example.com/failure",
             esewa_payment_url="https://rc-epay.esewa.com.np/api/epay/main/v2/form"
         )
-        print("✅ Payment Response:", payment_response['status'])
+        print("✅ Payment Response:", payment_response)
 
         status_response = esewa_check_status(
             total_amount=total_amount,

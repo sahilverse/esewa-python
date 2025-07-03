@@ -5,7 +5,7 @@ import hashlib
 import random
 import string
 import time
-from typing import Any, Dict
+from typing import Dict
 from urllib.parse import urlparse
 
 from .exceptions import ValidationError
@@ -69,26 +69,6 @@ def generate_hmac_sha256_hash(
         return base64.b64encode(hash_bytes).decode()
     return hash_bytes.hex()
 
-
-def safe_json_dumps(obj: Any) -> str:
-    """
-    Safely serialize an object to a JSON string, ignoring circular references.
-
-    Args:
-        obj (Any): The Python object to serialize.
-
-    Returns:
-        str: JSON string representation of the object without circular references.
-    """
-    seen = set()
-
-    def default(o):
-        if id(o) in seen:
-            return None
-        seen.add(id(o))
-        return str(o)
-
-    return json.dumps(obj, default=default)
 
 
 def base64_decode(encoded: str) -> Dict:
